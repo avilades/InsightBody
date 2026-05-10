@@ -1,0 +1,22 @@
+{
+    "name": "Python & Postgres Dev",
+    // Le indicamos que use el archivo docker-compose
+    "dockerComposeFile": "docker-compose.yml",
+    // El servicio al que VS Code debe conectarse
+    "service": "app",
+    "workspaceFolder": "/workspaces",
+
+    // Configuraciones de VS Code dentro del contenedor
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",        // Soporte de Python
+                "ms-python.vscode-pylance", // Inteligencia de código
+                "ckotzb.postgresql"        // Cliente DB dentro de VS Code
+            ]
+        }
+    },
+
+    // Para que el contenedor corra como tu usuario local (evita problemas de permisos)
+    "remoteUser": "vscode"
+}

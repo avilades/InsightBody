@@ -1,12 +1,24 @@
 from sqlalchemy.orm import Session
-from app.schemas import user_models
+from app.schemas import user_schema
 
-def get_usuario_by_email(db: Session, email: str):
-    return db.query(user_models.Usuario).filter(user_models.Usuario.email == email).first()
+import logging
+logger = logging.getLogger(__name__)
 
-def crear_usuario(db: Session, email: str, gender: user_models.Gender):
-    db_user = user_models.Usuario(email=email, is_active=True, gender=gender)
+
+def get_user_by_email(db: Session, email: str):
+    user_by_email = db.query(user_schema.User).filter(user_schema.User.email == email).first()
+    logger.info(f"Usuario obtenido por email: {email}")
+    return user_by_email
+
+def create_user(db: Session, email: str, gender: user_schema.Gender):
+    db_user = user_schema.User(email=email, is_active=True, gender=gender)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+    logger.info(f"Usuario creado en DB: {email} con género: {gender} repositorio user_repo")
     return db_user
+
+def get_users(db: Session, skip: int = 0, limit: int = 100):
+    users = db.query(user_schema.User).offset(skip).limit(limit).all()
+    logger.info(f"Usuarios obtenidos: {len(users)}")
+    return users

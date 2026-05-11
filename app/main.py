@@ -2,16 +2,26 @@ import logging
 from pathlib import Path
 import os
 from fastapi import FastAPI
+from .api.routers import user
 from .services import user_service
 from app.core.config_json import setup_logging, leer_config, initialize_lat_lon, initialize_logger_config
 from .core.database import SessionLocal, engine
-from .schemas import user_models
+from .schemas import user_schema
 
 # 1. Configurar el logging lo antes posible
 setup_logging()
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
+app = FastAPI(
+    title="Insight Body API", 
+    description="API para la gestión de usuarios y datos relacionados con el cuerpo humano", 
+    version="1.0.0", contact={
+    "name": "Equipo Insight Body",
+    "email": "equipo@insightbody.com"
+})
+
+# --- Inclusión de Routers para organizar la API ---
+app.include_router(user.router)     # Rutas de gestión de usuarios
 
 logger.info("--- Iniciando carga de configuración global ---")
 
@@ -41,15 +51,9 @@ POSTGRES_DB = os.getenv('POSTGRES_DB')
 
 logger.info(f"Conectando a la base de datos con host: {POSTGRES_HOST}, user: {POSTGRES_USER}, port: {POSTGRES_PORT}, db: {POSTGRES_DB}")    
 # Crear las tablas
-user_models.Base.metadata.create_all(bind=engine)
+user_schema.Base.metadata.create_all(bind=engine)
 
-def ejecutar_registro():
-    db = SessionLocal()
-    try:
-        nuevo = user_service.registrar_nuevo_usuario(db, "test_5@ejemplo.com", gender=user_models.Gender.valor1)
-        logger.info(f"Usuario creado: {nuevo.id}")
-    finally:
-        db.close()
 
 if __name__ == "__main__":
-    ejecutar_registro()
+    #ejecutar_registro()
+    logger.info("Aplicación iniciada correctamente. Listo para recibir solicitudes.")

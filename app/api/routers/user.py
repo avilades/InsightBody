@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.repositories import user_repo
 from app.core.database import get_db
 from app.services import user_service
-from app.schemas.user_schema import User
+from app.models.user_models import UserCreate, UserOut
 
 import logging
 logger = logging.getLogger(__name__)
@@ -37,13 +37,13 @@ async def read_users(request: Request, db: Session = Depends(get_db)):
     
     #return "<h1>Lista de Usuarios</h1><p>{users}.</p>"
 
-@router.post("/register", response_model=user_models.UserOut) # Definir un esquema de salida
+@router.post("/register", response_model=UserOut) # Definir un esquema de salida
 async def register_user(
-    user_data: user_models.UserCreate, # Recibimos el esquema de validación
+    user_data: UserCreate, # Recibimos el esquema de validación
     db: Session = Depends(get_db)
     ):    
     # Llamamos al servicio pasando los datos validados
-    new_user = user.register_new_user(
+    new_user = user_service.register_new_user(
         db, 
         email=user_data.email, 
         is_active=user_data.is_active, 

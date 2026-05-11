@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from .api.routers import user
 from .services import user_service
 from app.core.config_json import setup_logging, leer_config, initialize_lat_lon, initialize_logger_config
@@ -19,6 +19,51 @@ app = FastAPI(
     "name": "Equipo Insight Body",
     "email": "equipo@insightbody.com"
 })
+
+# --- Middleware de Logging de Peticiones ---
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """
+    Middleware global que intercepta cada petición HTTP para registrarla en el log.
+    Captura: Método, Ruta, Dirección IP, Parámetros, Cuerpo, Código de estado y Tiempo de proceso.
+    """
+    import time
+    start_time = time.time()
+    
+    # 1. Obtener información básica
+    client_ip = request.client.host if request.client else "unknown"
+    query_params = dict(request.query_params)
+    
+    # 2. Capturar el cuerpo de la petición de forma segura
+    body = b""
+    if request.method in ["POST", "PUT", "PATCH"]:
+        body = await request.body()
+        # Re-inyectamos el cuerpo en el canal de recepción para que FastAPI pueda leerlo después
+        async def receive():
+            return {"type": "http.request", "body": body}
+        request._receive = receive
+
+    # Loguear la petición entrante con todos sus detalles
+    log_msg = f">>> Petición: {request.method} {request.url.path} | IP: {client_ip}"
+    if query_params:
+        log_msg += f" | QueryParams: {query_params}"
+    if body:
+        # Intentamos decodificar como texto, si falla lo dejamos como bytes truncados
+        try:
+            log_msg += f" | Body: {body.decode('utf-8')}"
+        except:
+            log_msg += f" | Body: <binary data: {len(body)} bytes>"
+    
+    logging.debug(log_msg)
+
+    # 3. Procesar la petición
+    response = await call_next(request)
+
+    # 4. Información de la respuesta saliente
+    process_time = time.time() - start_time
+    logging.info(f"<<< Respuesta: {request.method} {request.url.path} - Status {response.status_code} - Tiempo: {process_time:.3f}s")
+    
+    return response
 
 # --- Inclusión de Routers para organizar la API ---
 app.include_router(user.router)     # Rutas de gestión de usuarios

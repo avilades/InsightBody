@@ -14,12 +14,20 @@ class Gender(enum.Enum):
 class UserCreate(BaseModel):
     email: EmailStr
     is_active: bool
+    name: str
+    surname: str
+    age: int | None = None
+    height: int | None = None
     gender: Gender
 
 class UserOut(BaseModel):
     id: int
     email: EmailStr
     is_active: bool
+    name: str
+    surname: str
+    age: int | None = None
+    height: int | None = None
     gender: Gender
 
     class Config:

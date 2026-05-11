@@ -19,6 +19,7 @@ router = APIRouter(
     tags=["Users"]
 )
 
+
 @router.get("/", response_class=JSONResponse)
 async def read_users(request: Request, db: Session = Depends(get_db)):
     """
@@ -30,25 +31,29 @@ async def read_users(request: Request, db: Session = Depends(get_db)):
     users = user_repo.get_users(db)
     logger.info(f"Usuarios obtenidos: {len(users)}")
 
-    
-   
     # Devolvemos solo la información necesaria
     return [{"email": user.email} for user in users]
-    
-    #return "<h1>Lista de Usuarios</h1><p>{users}.</p>"
 
-@router.post("/register", response_model=UserOut) # Definir un esquema de salida
+    # return "<h1>Lista de Usuarios</h1><p>{users}.</p>"
+
+
+# Definir un esquema de salida
+@router.post("/register", response_model=UserOut)
 async def register_user(
-    user_data: UserCreate, # Recibimos el esquema de validación
+    user_data: UserCreate,  # Recibimos el esquema de validación
     db: Session = Depends(get_db)
-    ):    
+):
     # Llamamos al servicio pasando los datos validados
     new_user = user_service.register_new_user(
-        db, 
-        email=user_data.email, 
-        is_active=user_data.is_active, 
+        db,
+        email=user_data.email,
+        is_active=user_data.is_active,
+        name=user_data.name,
+        surname=user_data.surname,
+        age=user_data.age,
+        height=user_data.height,
         gender=user_data.gender
     )
-    logger.info(f"Usuario registrado con email: {new_user.email} ID: {new_user.id} API /users/register")
+    logger.info(
+        f"Usuario registrado con email: {new_user.email} ID: {new_user.id} API /users/register")
     return new_user
-

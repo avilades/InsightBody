@@ -31,6 +31,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    # Limites de recursos para la base de datos
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 1024M
+        reservations:
+          cpus: "0.5"
+          memory: 512M
 
 
   # Servicio de la Aplicación (donde vivirá VS Code)
@@ -46,13 +55,24 @@ services:
     # Mantiene el contenedor encendido para que VS Code se conecte
     command: sleep infinity
     depends_on:
-      - db_insights
+      db_insights:
+        condition: service_healthy
     environment:
       # Estas variables le dicen a Python cómo conectar con el servicio 'db'
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db_insights:${POSTGRES_PORT}/${POSTGRES_DB}
     ports:
       # Expone el puerto de la aplicación (si es necesario)
+      # Puerto 8000: FastAPI app - No cambiar, otra aplicación usa este puerto
       - "8000:8000"
+    # Limites de recursos para la aplicación
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2048M
+        reservations:
+          cpus: "1"
+          memory: 1024M
 
 ##  pgadmin:
 ##    image: dpage/pgadmin4
@@ -72,3 +92,19 @@ services:
 volumes:
   postgres_data:
 
+##  NOTA SOBRE DIVISION DE .ENV (futuro):
+##  Para mejorar la seguridad y organización, considera dividir en:
+##  - .env.app       : Variables exclusivas de la aplicación
+##  - .env.database  : Variables exclusivas de PostgreSQL
+##  - .env.shared    : Variables compartidas entre servicios
+##  
+##  En docker-compose.yml usarías:
+##  app:
+##    env_file:
+##      - ../.env.app
+##      - ../.env.shared
+##  
+##  db_insights:
+##    env_file:
+##      - ../.env.database
+##      - ../.env.shared

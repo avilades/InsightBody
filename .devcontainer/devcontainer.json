@@ -16,6 +16,11 @@
             ]
         }
     },
+    "forwardPorts": [
+        8000,
+        5432,
+        5050
+    ],
 
     // Para que el contenedor corra como tu usuario local (evita problemas de permisos)
     "remoteUser": "vscode"

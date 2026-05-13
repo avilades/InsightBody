@@ -20,6 +20,20 @@ app = FastAPI(
     "email": "equipo@insightbody.com"
 })
 
+
+def db_startup():
+    # Docker inyecta las variables del .env directamente en el sistema
+    POSTGRES_HOST = os.getenv('POSTGRES_HOST')
+    POSTGRES_USER = os.getenv('POSTGRES_USER')
+    POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
+    POSTGRES_PORT = os.getenv('POSTGRES_PORT')
+    POSTGRES_DB = os.getenv('POSTGRES_DB')
+
+    logger.info(f"Conectando a la base de datos con host: {POSTGRES_HOST}, user: {POSTGRES_USER}, port: {POSTGRES_PORT}, db: {POSTGRES_DB}")    
+    # Crear las tablas
+    user_schema.Base.metadata.create_all(bind=engine)
+
+
 # --- Middleware de Logging de Peticiones ---
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
@@ -66,9 +80,15 @@ async def log_requests(request: Request, call_next):
     return response
 
 # --- Inclusión de Routers para organizar la API ---
-app.include_router(user.router)     # Rutas de gestión de usuarios
+app.include_router(user.router,  tags=["users"])     # Rutas de gestión de usuarios
 
-logger.info("--- Iniciando carga de configuración global ---")
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Evento de startup: Aplicación iniciada. Cargando configuración y preparando recursos...")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("Evento de shutdown: Aplicación deteniéndose. Liberando recursos y cerrando conexiones...")
 
 # Determinar la ruta de configuración relativa
 current_dir = Path(__file__).resolve().parent
@@ -81,24 +101,17 @@ if not config_data:
     logger.critical("No se pudo cargar la configuración. Deteniendo aplicación.")
     exit(1)
 
-# 3. Inicializar variables globales y re-configurar logging si es necesario
-LATITUD, LONGITUD = initialize_lat_lon(config_data)
-setup_logging(config_data)
+## # 3. Inicializar variables globales y re-configurar logging si es necesario
+## LATITUD, LONGITUD = initialize_lat_lon(config_data)
+#logger.info(f"Configuración de coordenadas inicializada. Coords: ({LATITUD}, {LONGITUD})")
 
-logger.info(f"Configuración de coordenadas inicializada. Coords: ({LATITUD}, {LONGITUD})")
+db_startup()
 
-# Docker inyecta las variables del .env directamente en el sistema
-POSTGRES_HOST = os.getenv('POSTGRES_HOST')
-POSTGRES_USER = os.getenv('POSTGRES_USER')
-POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
-POSTGRES_PORT = os.getenv('POSTGRES_PORT')
-POSTGRES_DB = os.getenv('POSTGRES_DB')
 
-logger.info(f"Conectando a la base de datos con host: {POSTGRES_HOST}, user: {POSTGRES_USER}, port: {POSTGRES_PORT}, db: {POSTGRES_DB}")    
-# Crear las tablas
-user_schema.Base.metadata.create_all(bind=engine)
+
 
 
 if __name__ == "__main__":
-    #ejecutar_registro()
-    logger.info("Aplicación iniciada correctamente. Listo para recibir solicitudes.")
+    ## #ejecutar_registro()
+    ## db_startup()
+    logger.info(" --------- Aplicación iniciada. Listo para recibir peticiones. ------")

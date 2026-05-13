@@ -14,10 +14,24 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_PORT: ${POSTGRES_PORT}
-    
+    ports:
+      # Mapea el puerto de Postgres para que puedas conectarte desde tu máquina local
+      - "${POSTGRES_PORT_OUT}:${POSTGRES_PORT}"
     volumes:
+      # *** CAMBIO CLAVE AQUÍ ***
+      # Sintaxis: [Ruta Local] : [Ruta dentro del Contenedor]
+      # Usaremos el path relativo al archivo docker-compose.yml
+      # - ./../001_postgres_data/INSIGHT_BODY:/var/lib/postgresql/data
+      # - ${POSTGRES_DATA_PATH}:/var/lib/postgresql/data
       # Persistencia: para que no pierdas tus datos al cerrar el contenedor
+      # se guarda dentro del contenedor en /var/lib/postgresql/data, pero lo mapeamos a ./db_data en tu máquina local
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 
   # Servicio de la Aplicación (donde vivirá VS Code)
   app:
@@ -36,6 +50,25 @@ services:
     environment:
       # Estas variables le dicen a Python cómo conectar con el servicio 'db'
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db_insights:${POSTGRES_PORT}/${POSTGRES_DB}
+    ports:
+      # Expone el puerto de la aplicación (si es necesario)
+      - "8000:8000"
 
+##  pgadmin:
+##    image: dpage/pgadmin4
+##    restart: unless-stopped
+##    environment:
+##      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+##      PGADMIN_DEFAULT_PASSWORD: root
+##      PGADMIN_LISTEN_PORT: 5050
+##      SCRIPT_NAME: /pgadmin
+##    ports:
+##      - "5050:5050"
+##    depends_on:
+##      db_insights:
+##        condition: service_healthy
+
+# como usamos un volumen para persistencia, no necesitamos declarar un volumen nombrado aquí
 volumes:
   postgres_data:
+

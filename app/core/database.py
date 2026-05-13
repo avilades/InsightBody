@@ -13,7 +13,7 @@ POSTGRES_PORT = os.getenv('POSTGRES_PORT')
 POSTGRES_DB = os.getenv('POSTGRES_DB')
 
 # Inicializamos el sistema de logs
-setup_logging()
+#setup_logging()
 
 logger = logging.getLogger(__name__)
 

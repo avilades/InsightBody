@@ -22,22 +22,24 @@ def get_user_by_email(db: Session, email: str):
 
 
 def create_user(
-        db: Session,
-        email: str,
-        is_active: bool,
-        name: str,
-        surname: str,
-        age: int | None,
-        height: int | None,
-        gender: Gender):
+            db: Session,
+            email: str,
+            is_active: bool,
+            name: str,
+            surname: str,
+            age: int | None,
+            height: int | None,
+            gender: Gender
+        ):
     db_user = User.User(
-        email=email,
-        is_active=is_active,
-        name=name,
-        surname=surname,
-        age=age,
-        height=height,
-        gender=gender)
+            email=email,
+            is_active=is_active,
+            name=name,
+            surname=surname,
+            age=age,
+            height=height,
+            gender=gender
+        )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -50,5 +52,5 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
     users = db.query(
         User
     ).offset(skip).limit(limit).all()
-    logger.info(f"Usuarios obtenidos: {len(users)}")
+    logger.info(f"Usuarios obtenidos: {len(users)} desde repositorio user_repo, get_users")
     return users

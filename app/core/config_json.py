@@ -130,9 +130,11 @@ def setup_logging(config_data=None):
         handlers=[handler],
         force=True
     )
+
+    #logging.info(f"\n\n")
     
     logging.info("Sistema de logs inicializado.")
-    logging.info(f"Archivo: {log_base} -- Log level: {LOG_LEVEL}")
+    logging.info(f"Configuración del logger inicializada. LOG_LEVEL: {LOG_LEVEL}, LOG_DIR: {LOG_DIR}, LOG_FILE_NAME: {LOG_FILE_NAME}")
 
 # Inicializamos las variables globales al importar el módulo
 LATITUD, LONGITUD = None, None
@@ -148,5 +150,4 @@ if __name__ == "__main__":
 
     initialize_lat_lon(config_data)
     initialize_logger_config(config_data)
-    logger.info(f"Configuración del logger inicializada. LOG_LEVEL: {LOG_LEVEL}, LOG_DIR: {LOG_DIR}, LOG_FILE_NAME: {LOG_FILE_NAME}")
  

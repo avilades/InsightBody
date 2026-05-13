@@ -20,22 +20,31 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_class=JSONResponse)
+@router.get("/read_users", response_class=JSONResponse)
 async def read_users(request: Request, db: Session = Depends(get_db)):
     """
-    Endpoint de ejemplo para listar usuarios.
-    En una implementación real, aquí se consultaría la base de datos y se devolverían los usuarios registrados.
+    Endpoint de ejemplo para listar todos los usuarios.
     """
-    logger.info("Endpoint /users/ accedido para listar usuarios")
+    logger.info("Endpoint /users/read accedido para listar usuarios")
     # Aquí se debería implementar la lógica para obtener los usuarios desde la base de datos
     users = user_repo.get_users(db)
     logger.info(f"Usuarios obtenidos: {len(users)}")
 
     # Devolvemos solo la información necesaria
-    return [{"email": user.email} for user in users]
+    return [{"email": user.email, "is_active": user.is_active, "name": user.name, "surname": user.surname, "age": user.age, "height": user.height, "gender": user.gender} for user in users]
 
-    # return "<h1>Lista de Usuarios</h1><p>{users}.</p>"
+@router.get("/read_user/{email}", response_class=JSONResponse)
+async def read_user(request: Request, db: Session = Depends(get_db), email: str = None):
+    """
+    Endpoint de ejemplo para listar un usuario específico por email.
+    """
+    logger.info("Endpoint /users/read_user accedido para listar un usuario específico")
+    user = user_repo.get_user_by_email(db, email=email)
+    
+    logger.info(f"Usuarios encontrado: {len(user)}")
 
+    # Devolvemos solo la información necesaria
+    return [{"email": user.email, "is_active": user.is_active, "name": user.name, "surname": user.surname, "age": user.age, "height": user.height, "gender": user.gender} ]
 
 # Definir un esquema de salida
 @router.post("/register", response_model=UserOut)
@@ -57,3 +66,4 @@ async def register_user(
     logger.info(
         f"Usuario registrado con email: {new_user.email} ID: {new_user.id} API /users/register")
     return new_user
+    
